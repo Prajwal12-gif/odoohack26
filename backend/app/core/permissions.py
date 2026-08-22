@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 
 from app.models.user import User, UserRole
-from app.routes.auth import get_current_user
+from app.core.security import get_current_user
 
 
 def require_employee(

@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.user import (
     LoginRequest,
@@ -26,7 +26,7 @@ router = APIRouter(
     tags=["Authentication"]
 )
 
-security = HTTPBearer()
+# get_current_user is defined in app.core.security
 
 
 # ============================================================
@@ -96,8 +96,11 @@ def verify_email(
 
     # Check OTP expiration
     now = datetime.now(timezone.utc)
+    otp_expires_at = user.otp_expires_at
+    if otp_expires_at and otp_expires_at.tzinfo is None:
+        otp_expires_at = otp_expires_at.replace(tzinfo=timezone.utc)
 
-    if user.otp_expires_at < now:
+    if otp_expires_at is None or otp_expires_at < now:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="OTP has expired. Please request a new OTP"
@@ -180,65 +183,6 @@ def login(
     )
 
 
-# ============================================================
-# GET CURRENT USER FROM JWT
-# ============================================================
-
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-
-    payload = decode_access_token(
-        credentials.credentials
-    )
-
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
-        )
-
-    user_id = payload.get("sub")
-
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
-
-    try:
-        user_id = int(user_id)
-    except (TypeError, ValueError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
-
-    user = (
-        db.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive"
-        )
-
-    return user
-
-
-# ============================================================
-# CURRENT USER
-# ============================================================
 
 @router.get(
     "/me",
