@@ -3,6 +3,8 @@ from enum import Enum
 from sqlalchemy import Boolean, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
+from datetime import datetime
+from sqlalchemy import Boolean, DateTime, String
 
 from app.database import Base
 
@@ -49,6 +51,15 @@ class User(Base):
         Boolean,
         default=False,
         nullable=False
+    )
+    otp_code: Mapped[str | None] = mapped_column(
+    String(6),
+    nullable=True
+    )
+
+    otp_expires_at: Mapped[datetime | None] = mapped_column(
+    DateTime(timezone=True),
+    nullable=True
     )
 
     is_active: Mapped[bool] = mapped_column(

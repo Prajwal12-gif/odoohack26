@@ -1,13 +1,12 @@
 from fastapi import FastAPI
-from sqlalchemy import text
 
-from app.database import engine
+from app.routers.auth import router as auth_router
+from app.api.employee import router as employee_router
 
 
 app = FastAPI(
     title="HRMS API",
-    version="1.0.0",
-    description="Human Resource Management System API"
+    version="1.0.0"
 )
 
 
@@ -19,19 +18,12 @@ def root():
 
 
 @app.get("/health")
-def health_check():
-    try:
-        with engine.connect() as connection:
-            connection.execute(text("SELECT 1"))
+def health():
+    return {
+        "status": "healthy",
+        "database": "connected"
+    }
 
-        return {
-            "status": "healthy",
-            "database": "connected"
-        }
 
-    except Exception as e:
-        return {
-            "status": "unhealthy",
-            "database": "disconnected",
-            "error": str(e)
-        }
+app.include_router(auth_router)
+app.include_router(employee_router)
