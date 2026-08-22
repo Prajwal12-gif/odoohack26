@@ -89,3 +89,18 @@ class Employee(Base):
         "User",
         back_populates="employee"
     )
+    attendance_records: Mapped[list["Attendance"]] = relationship(
+        "Attendance",
+        back_populates="employee",
+        cascade="all, delete-orphan",
+    )
+    leave_requests: Mapped[list["LeaveRequest"]] = relationship(
+        "LeaveRequest",
+        back_populates="employee",
+        cascade="all, delete-orphan",
+    )
+    payroll_entries: Mapped[list["Payroll"]] = relationship(
+        "Payroll",
+        back_populates="employee",
+        cascade="all, delete-orphan",
+    )

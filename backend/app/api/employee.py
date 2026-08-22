@@ -15,6 +15,7 @@ from app.services.employee_service import (
     update_employee_profile
 )
 from app.core.permissions import require_employee
+from app.core.security import get_current_user
 
 
 router = APIRouter(

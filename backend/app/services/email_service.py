@@ -32,16 +32,18 @@ OdooHack26 Team
 """
     )
 
-    with smtplib.SMTP(
-        settings.SMTP_HOST,
-        settings.SMTP_PORT
-    ) as server:
-
-        server.starttls()
-
-        server.login(
-            settings.SMTP_USERNAME,
-            settings.SMTP_PASSWORD
-        )
-
-        server.send_message(message)
+    try:
+        with smtplib.SMTP(
+            settings.SMTP_HOST,
+            settings.SMTP_PORT
+        ) as server:
+            server.starttls()
+            server.login(
+                settings.SMTP_USERNAME,
+                settings.SMTP_PASSWORD
+            )
+            server.send_message(message)
+    except Exception:
+        # Local dev fallback: keep the app usable even without a live SMTP host.
+        print("[email-service] SMTP unavailable. Verification OTP would be sent to:", recipient_email)
+        print(f"[email-service] OTP: {otp}")
